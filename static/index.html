@@ -246,8 +246,17 @@
       }
     }
 
-    async function resetDemo() {
-      await fetch('/admin/reset', { method: 'POST' });
+      async function resetDemo() {
+      const token = prompt('Enter admin token to reset demo data:');
+      if (token === null) return;
+      const res = await fetch('/admin/reset', {
+        method: 'POST',
+        headers: { 'X-Admin-Token': token }
+      });
+      if (!res.ok) {
+        document.getElementById('responseBox').textContent = 'Reset denied: invalid admin token.';
+        return;
+      }
       document.getElementById('statusBadge').className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-400';
       document.getElementById('statusBadge').textContent = 'Counters Reset — Ready for Demo';
       document.getElementById('responseBox').textContent = 'All usage counters and audit logs have been cleared.';
