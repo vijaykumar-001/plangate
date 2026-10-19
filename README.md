@@ -53,4 +53,17 @@ Modern entitlement and metering tools (Stigg, Orb, Metronome, Lago) expect engin
                             | - Monthly Usage Counters     |                  |   Zero limit/plan code inside|
                             | - Explainable Audit Logs     |                  +------------------------------+
                             +------------------------------+
-                            
+4. Main API ReferenceMethodEndpointDescriptionGET/Interactive Chart.js Dashboard, Live Traffic Simulator, Forecast Cards & Audit Log UIANY/gateway/{path}Zero-code entitlement proxy. Authenticates X-API-Key, enforces plan limits, injects X-PlanGate-* headers, and forwards allowed requests to the upstream APIGET/forecast?endpoint=/exportReturns daily burn rate, remaining quota, and projected exhaustion date for the authenticated customerGET/logsReturns real-time usage summary across plans and the latest 30 audit log entriesPOST/admin/resetResets demo counters and audit logs for live evaluationGET/direct/notesDirect access to the untouched upstream Notes API (demonstrates zero limit logic inside the existing app)
+6. Security & Testing Highlights
+SHA-256 API Key Hashing: Raw API keys (pg_free_key_123, pg_pro_key_999) are never stored in plain text in SQLite; only SHA-256 digests (api_key_hash) are persisted and queried.
+
+Server-Side Plan Enforcement: Client requests cannot spoof plan names; plans are resolved strictly from the authenticated key hash.
+
+Automated pytest Suite (test_plangate.py): Verifies under-limit forwarding, 80% warning threshold, 100% HTTP 429 explainable block, invalid/missing key rejection, and burn-rate math.
+
+7. Future Scope
+Distributed Redis Counters: Sub-millisecond atomic counters across multi-region gateway nodes.
+
+Multi-Tenant Self-Serve Portal: Allow B2B SaaS admins to configure endpoints and pricing tiers dynamically via UI.
+
+Webhook Alerts & Stripe Billing Sync: Trigger Slack/email webhooks at 80% usage and one-click Stripe checkout links inside 429 responses.
