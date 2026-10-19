@@ -22,13 +22,15 @@ Modern entitlement and metering tools (Stigg, Orb, Metronome, Lago) expect engin
 
 ## 2. Market Gap Comparison
 
-| Feature / Capability | Legacy API Gateways (Kong / NGINX) | Code-Level Billing SDKs (Stigg / Orb / Lago) | **PlanGate (Ours)** |
-| :--- | :---: | :---: | :---: |
-| **Zero-Code Retrofit on Existing APIs** | ✅ Yes | ❌ No (Requires SDK integration) | **✅ Yes (Drop-in Proxy)** |
-| **Per-Plan SaaS Entitlement Rules** | ❌ No (IP/Rate-based only) | ✅ Yes | **✅ Yes (Free, Pro, Custom)** |
-| **Explainable Blocks (Why + Reset + Upgrade Tier)** | ❌ Plain HTTP 429 | ⚠️ Custom UI work required | **✅ Built-in JSON + Headers** |
-| **Proactive 80% Quota Warnings** | ❌ No | ⚠️ Webhook setup required | **✅ Automatic Header & Payload Warning** |
-| **Real-Time Burn-Rate Exhaustion Forecast** | ❌ No | ⚠️ Enterprise tiers only | **✅ Built-in `/forecast` Engine** |
+| Capability | Generic API gateways (Kong, NGINX) | Entitlement and billing platforms (Stigg, Orb, Lago) | **PlanGate** |
+| --- | --- | --- | --- |
+| Works in front of an existing API without app code changes | ✅ Yes | Usually needs SDK or sidecar integration | **✅ Yes** |
+| Plan-based rules per endpoint (Free, Pro) | Possible with custom plugins and config | ✅ Yes | **✅ Built in** |
+| Explainable blocks (reason, reset time, plan to unblock) | Typically a plain 429 unless customized | Product team builds this in their own UI | **✅ Built into the response** |
+| Warning before the limit (80%) | Not standard | Needs alert or webhook setup | **✅ Automatic** |
+| Burn-rate forecast of when the quota runs out | Not standard | Varies by vendor | **✅ Built-in `/forecast`** |
+
+PlanGate's focus is combining all five in one drop-in layer for existing APIs.
 
 ---
 
