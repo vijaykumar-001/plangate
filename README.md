@@ -53,7 +53,9 @@ Modern entitlement and metering tools (Stigg, Orb, Metronome, Lago) expect engin
                             | - Monthly Usage Counters     |                  |   Zero limit/plan code inside|
                             | - Explainable Audit Logs     |                  +------------------------------+
                             +------------------------------+
-4. Main API Reference
+```
+
+## 4. Main API Reference
 Method
 Endpoint
 Description
@@ -76,14 +78,14 @@ GET
 /direct/notes
 Direct access to the untouched upstream Notes API (demonstrates zero limit logic inside the existing app)
 
-6. Security & Testing Highlights
+## 5. Security & Testing Highlights
 SHA-256 API Key Hashing: Raw API keys (pg_free_key_123, pg_pro_key_999) are never stored in plain text in SQLite; only SHA-256 digests (api_key_hash) are persisted and queried.
 
 Server-Side Plan Enforcement: Client requests cannot spoof plan names; plans are resolved strictly from the authenticated key hash.
 
 Automated pytest Suite (test_plangate.py): Verifies under-limit forwarding, 80% warning threshold, 100% HTTP 429 explainable block, invalid/missing key rejection, and burn-rate math.
 
-7. Future Scope
+## 6. Future Scope
 Distributed Redis Counters: Sub-millisecond atomic counters across multi-region gateway nodes.
 
 Multi-Tenant Self-Serve Portal: Allow B2B SaaS admins to configure endpoints and pricing tiers dynamically via UI.
