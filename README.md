@@ -53,7 +53,29 @@ Modern entitlement and metering tools (Stigg, Orb, Metronome, Lago) expect engin
                             | - Monthly Usage Counters     |                  |   Zero limit/plan code inside|
                             | - Explainable Audit Logs     |                  +------------------------------+
                             +------------------------------+
-4. Main API ReferenceMethodEndpointDescriptionGET/Interactive Chart.js Dashboard, Live Traffic Simulator, Forecast Cards & Audit Log UIANY/gateway/{path}Zero-code entitlement proxy. Authenticates X-API-Key, enforces plan limits, injects X-PlanGate-* headers, and forwards allowed requests to the upstream APIGET/forecast?endpoint=/exportReturns daily burn rate, remaining quota, and projected exhaustion date for the authenticated customerGET/logsReturns real-time usage summary across plans and the latest 30 audit log entriesPOST/admin/resetResets demo counters and audit logs for live evaluationGET/direct/notesDirect access to the untouched upstream Notes API (demonstrates zero limit logic inside the existing app)
+4. Main API Reference
+Method
+Endpoint
+Description
+GET
+/
+Interactive Chart.js Dashboard, Live Traffic Simulator, Forecast Cards & Audit Log UI
+ANY
+/gateway/{path}
+Zero-code entitlement proxy. Authenticates X-API-Key, enforces plan limits, injects X-PlanGate-* headers, and forwards allowed requests to the upstream API
+GET
+/forecast?endpoint=/export
+Returns daily burn rate, remaining quota, and projected exhaustion date for the authenticated customer
+GET
+/logs
+Returns real-time usage summary across plans and the latest 30 audit log entries
+POST
+/admin/reset
+Resets demo counters and audit logs for live evaluation
+GET
+/direct/notes
+Direct access to the untouched upstream Notes API (demonstrates zero limit logic inside the existing app)
+
 6. Security & Testing Highlights
 SHA-256 API Key Hashing: Raw API keys (pg_free_key_123, pg_pro_key_999) are never stored in plain text in SQLite; only SHA-256 digests (api_key_hash) are persisted and queried.
 
