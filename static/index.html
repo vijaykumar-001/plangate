@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PlanGate — Zero-Code API Entitlement Gateway</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+
+  <!-- Top Navbar -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="h-9 w-9 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-600/30">P</div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight">PlanGate <span class="text-xs font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-0.5 rounded-full ml-2">Zero-Code Entitlement Gateway</span></h1>
+          <p class="text-xs text-slate-400">Add plans, usage limits, explainable blocks & burn-rate forecasts to any existing API</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="/direct/notes" target="_blank" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg border border-slate-700 transition">
+          View Untouched App (/direct/notes) ↗
+        </a>
+        <button onclick="resetDemo()" class="text-xs bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 px-3 py-2 rounded-lg font-medium transition">
+          Reset Demo Counters
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-6 space-y-6">
+
+    <!-- 1-Click Live Traffic Simulator & Explainable Block Inspector -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+        <div>
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-indigo-400 mb-1">Live Gateway Traffic Simulator</h2>
+          <p class="text-xs text-slate-400 mb-4">Send real requests through <code class="text-slate-200 bg-slate-800 px-1.5 py-0.5 rounded">/gateway/export</code> to test Allow (&lt;80%), Warn (80%), and Explainable Block (100%).</p>
+
+          <div class="space-y-2.5">
+            <button onclick="sendGatewayCall('pg_free_key_123', '/gateway/export')" class="w-full text-left px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 font-medium text-sm flex items-center justify-between transition shadow">
+              <span>1. Call <code class="bg-indigo-700/60 px-1.5 py-0.5 rounded text-xs">/gateway/export</code> as <b>Free Plan</b></span>
+              <span class="text-xs bg-indigo-900/60 px-2 py-0.5 rounded">Limit: 10/mo</span>
+            </button>
+
+            <button onclick="burstFreeCalls(8)" class="w-full text-left px-4 py-2.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-medium text-sm flex items-center justify-between transition">
+              <span>⚡ Fast-Forward: Send Calls Until 80% Warning</span>
+              <span class="text-xs">Demo Helper</span>
+            </button>
+
+            <button onclick="sendGatewayCall('pg_pro_key_999', '/gateway/export')" class="w-full text-left px-4 py-2.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 font-medium text-sm flex items-center justify-between transition">
+              <span>2. Call <code class="bg-emerald-900/60 px-1.5 py-0.5 rounded text-xs">/gateway/export</code> as <b>Pro Plan</b></span>
+              <span class="text-xs">Limit: 100/mo</span>
+            </button>
+
+            <button onclick="sendGatewayCall('invalid_hacker_key_000', '/gateway/export')" class="w-full text-left px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-medium text-sm flex items-center justify-between transition">
+              <span>3. Test Unrecognized API Key (Security Check)</span>
+              <span class="text-xs text-rose-400">HTTP 403</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-5 pt-4 border-t border-slate-800 text-xs text-slate-400 space-y-1">
+          <div><b class="text-slate-300">Free Key:</b> <code>pg_free_key_123</code> (SHA-256 hashed in SQLite)</div>
+          <div><b class="text-slate-300">Pro Key:</b> <code>pg_pro_key_999</code> (SHA-256 hashed in SQLite)</div>
+        </div>
+      </div>
+
+      <!-- Live Response & Explainable Decision Viewer -->
+      <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300">Gateway Decision & Explainable Response</h2>
+          <div id="statusBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-400">
+            Ready — Click a button to send traffic
+          </div>
+        </div>
+
+        <!-- Quota Headers Bar -->
+        <div id="headersBar" class="grid grid-cols-4 gap-2 mb-3 text-xs bg-slate-950/80 p-2.5 rounded-lg border border-slate-800">
+          <div><span class="text-slate-500 block">X-PlanGate-Plan</span><span id="hdrPlan" class="font-mono font-semibold text-slate-200">-</span></div>
+          <div><span class="text-slate-500 block">X-PlanGate-Decision</span><span id="hdrDecision" class="font-mono font-semibold text-slate-200">-</span></div>
+          <div><span class="text-slate-500 block">X-PlanGate-Remaining</span><span id="hdrRemaining" class="font-mono font-semibold text-slate-200">-</span></div>
+          <div><span class="text-slate-500 block">X-PlanGate-Reset</span><span id="hdrReset" class="font-mono font-semibold text-slate-200 truncate block">-</span></div>
+        </div>
+
+        <pre id="responseBox" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg p-4 text-xs font-mono text-emerald-300 overflow-x-auto max-h-60">Click "Call /gateway/export as Free Plan" on the left to inspect PlanGate's live response and quota headers.</pre>
+      </div>
+    </section>
+
+    <!-- Burn-Rate Forecasts & Chart.js Usage Visualization -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Forecast Cards -->
+      <div class="lg:col-span-5 space-y-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-semibold text-slate-200">Acme Startup — Free Plan Forecast</h3>
+            <span id="freeForecastBadge" class="text-xs px-2 py-0.5 rounded font-semibold bg-emerald-500/20 text-emerald-300">SAFE</span>
+          </div>
+          <p id="freeForecastMsg" class="text-xs text-slate-300 leading-relaxed mb-3">Loading burn-rate forecast...</p>
+          <div class="flex justify-between text-xs text-slate-400 border-t border-slate-800 pt-2.5">
+            <span>Export Usage: <b id="freeUsageText" class="text-slate-200">0/10</b></span>
+            <span>Burn Pace: <b id="freeBurnRate" class="text-slate-200">0.0/day</b></span>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-semibold text-slate-200">Enterprise Corp — Pro Plan Forecast</h3>
+            <span id="proForecastBadge" class="text-xs px-2 py-0.5 rounded font-semibold bg-emerald-500/20 text-emerald-300">SAFE</span>
+          </div>
+          <p id="proForecastMsg" class="text-xs text-slate-300 leading-relaxed mb-3">Loading burn-rate forecast...</p>
+          <div class="flex justify-between text-xs text-slate-400 border-t border-slate-800 pt-2.5">
+            <span>Export Usage: <b id="proUsageText" class="text-slate-200">0/100</b></span>
+            <span>Burn Pace: <b id="proBurnRate" class="text-slate-200">0.0/day</b></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart.js Usage Bars -->
+      <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-xl p-5">
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-300 mb-3">Real-Time Plan Quota Utilization (%)</h3>
+        <div class="h-52">
+          <canvas id="usageChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Audit Log Table -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-300">Live Entitlement Audit Log</h3>
+          <p class="text-xs text-slate-400">Every gateway decision is persisted to SQLite with customer, plan, usage count, and explainable reason</p>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 uppercase">
+              <th class="py-2.5 px-3">Time (UTC)</th>
+              <th class="py-2.5 px-3">Customer</th>
+              <th class="py-2.5 px-3">Plan</th>
+              <th class="py-2.5 px-3">Endpoint</th>
+              <th class="py-2.5 px-3">Decision</th>
+              <th class="py-2.5 px-3">Quota</th>
+              <th class="py-2.5 px-3">Explainable Reason</th>
+            </tr>
+          </thead>
+          <tbody id="auditTableBody" class="divide-y divide-slate-800/70">
+            <tr><td colspan="7" class="py-4 text-center text-slate-500">No requests logged yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let usageChartInstance = null;
+
+    function initChart() {
+      const ctx = document.getElementById('usageChart').getContext('2d');
+      usageChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Free Plan (/export)', 'Free Plan (/notes)', 'Pro Plan (/export)', 'Pro Plan (/notes)'],
+          datasets: [{
+            label: 'Quota Used (%)',
+            data: [0, 0, 0, 0],
+            backgroundColor: ['#6366f1', '#3b82f6', '#10b981', '#14b8a6'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              grid: { color: '#1e293b' },
+              ticks: { color: '#94a3b8', callback: v => v + '%' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#cbd5e1' }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    async function sendGatewayCall(apiKey, path) {
+      const res = await fetch(path, {
+        method: 'GET',
+        headers: { 'X-API-Key': apiKey }
+      });
+      const data = await res.json();
+
+      // Update Quota Headers inspector
+      const plan = res.headers.get('X-PlanGate-Plan') || 'N/A';
+      const decision = res.headers.get('X-PlanGate-Decision') || (res.status === 403 ? 'BLOCK (403)' : 'BLOCK');
+      const remaining = res.headers.get('X-PlanGate-Remaining') ?? '-';
+      const limit = res.headers.get('X-PlanGate-Limit') ?? '-';
+      const reset = res.headers.get('X-PlanGate-Reset') || '-';
+
+      document.getElementById('hdrPlan').textContent = plan;
+      document.getElementById('hdrDecision').textContent = decision;
+      document.getElementById('hdrRemaining').textContent = remaining !== '-' ? `${remaining} / ${limit}` : '-';
+      document.getElementById('hdrReset').textContent = reset;
+
+      const badge = document.getElementById('statusBadge');
+      const box = document.getElementById('responseBox');
+      box.textContent = JSON.stringify(data, null, 2);
+
+      if (decision === 'ALLOW') {
+        badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        badge.textContent = `HTTP ${res.status} — ALLOW (Within Plan Limits)`;
+        box.className = 'flex-1 bg-slate-950 border border-emerald-800/60 rounded-lg p-4 text-xs font-mono text-emerald-300 overflow-x-auto max-h-60';
+      } else if (decision === 'WARN') {
+        badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        badge.textContent = `HTTP ${res.status} — 80% QUOTA WARNING`;
+        box.className = 'flex-1 bg-slate-950 border border-amber-600/60 rounded-lg p-4 text-xs font-mono text-amber-300 overflow-x-auto max-h-60';
+      } else {
+        badge.className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40';
+        badge.textContent = `HTTP ${res.status} — EXPLAINABLE BLOCK`;
+        box.className = 'flex-1 bg-slate-950 border border-rose-600/60 rounded-lg p-4 text-xs font-mono text-rose-300 overflow-x-auto max-h-60';
+      }
+
+      await refreshDashboard();
+    }
+
+    async function burstFreeCalls(targetCount) {
+      const logsRes = await fetch('/logs');
+      const logsData = await logsRes.json();
+      const currentUsed = logsData.usage_summary.Free['/export'].used;
+      const callsNeeded = Math.max(1, targetCount - currentUsed);
+
+      for (let i = 0; i < callsNeeded; i++) {
+        await sendGatewayCall('pg_free_key_123', '/gateway/export');
+      }
+    }
+
+    async function resetDemo() {
+      await fetch('/admin/reset', { method: 'POST' });
+      document.getElementById('statusBadge').className = 'text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-400';
+      document.getElementById('statusBadge').textContent = 'Counters Reset — Ready for Demo';
+      document.getElementById('responseBox').textContent = 'All usage counters and audit logs have been cleared.';
+      await refreshDashboard();
+    }
+
+    function styleForecastBadge(el, status) {
+      el.textContent = status;
+      if (status === 'SAFE') {
+        el.className = 'text-xs px-2 py-0.5 rounded font-semibold bg-emerald-500/20 text-emerald-300';
+      } else if (status === 'AT_RISK') {
+        el.className = 'text-xs px-2 py-0.5 rounded font-semibold bg-amber-500/20 text-amber-300';
+      } else {
+        el.className = 'text-xs px-2 py-0.5 rounded font-semibold bg-rose-500/20 text-rose-300';
+      }
+    }
+
+    async function refreshDashboard() {
+      const res = await fetch('/logs');
+      const data = await res.json();
+
+      const free = data.usage_summary.Free;
+      const pro = data.usage_summary.Pro;
+
+      // Update Free Forecast Card
+      document.getElementById('freeUsageText').textContent = `${free['/export'].used}/${free['/export'].limit}`;
+      document.getElementById('freeBurnRate').textContent = `${free.forecast_export.daily_burn_rate}/day`;
+      document.getElementById('freeForecastMsg').textContent = free.forecast_export.message;
+      styleForecastBadge(document.getElementById('freeForecastBadge'), free.forecast_export.status);
+
+      // Update Pro Forecast Card
+      document.getElementById('proUsageText').textContent = `${pro['/export'].used}/${pro['/export'].limit}`;
+      document.getElementById('proBurnRate').textContent = `${pro.forecast_export.daily_burn_rate}/day`;
+      document.getElementById('proForecastMsg').textContent = pro.forecast_export.message;
+      styleForecastBadge(document.getElementById('proForecastBadge'), pro.forecast_export.status);
+
+      // Update Chart.js percentages
+      const pctFreeExport = Math.min(100, Math.round((free['/export'].used / free['/export'].limit) * 100));
+      const pctFreeNotes = Math.min(100, Math.round((free['/notes'].used / free['/notes'].limit) * 100));
+      const pctProExport = Math.min(100, Math.round((pro['/export'].used / pro['/export'].limit) * 100));
+      const pctProNotes = Math.min(100, Math.round((pro['/notes'].used / pro['/notes'].limit) * 100));
+
+      usageChartInstance.data.datasets[0].data = [pctFreeExport, pctFreeNotes, pctProExport, pctProNotes];
+      usageChartInstance.data.datasets[0].backgroundColor = [
+        pctFreeExport >= 100 ? '#f43f5e' : (pctFreeExport >= 80 ? '#f59e0b' : '#6366f1'),
+        '#3b82f6',
+        '#10b981',
+        '#14b8a6'
+      ];
+      usageChartInstance.update();
+
+      // Update Audit Log Table
+      const tbody = document.getElementById('auditTableBody');
+      if (!data.logs || data.logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="py-4 text-center text-slate-500">No requests logged yet. Click a simulator button above!</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.logs.map(log => {
+        let badgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+        if (log.decision === 'WARN') badgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+        if (log.decision === 'BLOCK') badgeClass = 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+
+        const timeShort = log.timestamp.split('T')[1]?.slice(0, 8) || log.timestamp;
+        return `
+          <tr class="hover:bg-slate-800/40">
+            <td class="py-2.5 px-3 font-mono text-slate-400">${timeShort}</td>
+            <td class="py-2.5 px-3 font-medium text-slate-200">${log.customer_id}</td>
+            <td class="py-2.5 px-3">${log.plan_name}</td>
+            <td class="py-2.5 px-3 font-mono text-indigo-300">${log.endpoint}</td>
+            <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded border text-[11px] font-semibold ${badgeClass}">${log.decision}</span></td>
+            <td class="py-2.5 px-3 font-mono">${log.current_usage}/${log.limit_value}</td>
+            <td class="py-2.5 px-3 text-slate-300">${log.reason}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initChart();
+      refreshDashboard();
+    });
+  </script>
+</body>
+</html>
