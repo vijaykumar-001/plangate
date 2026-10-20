@@ -1,4 +1,5 @@
 import os
+import secrets
 import httpx
 from fastapi import FastAPI, Request, Header
 from fastapi.responses import JSONResponse, FileResponse
@@ -77,9 +78,19 @@ def get_audit_logs():
     }
 
 
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN")
+
+
 @app.post("/admin/reset")
-def reset_demo_data():
-    """Reset all counters and logs for a clean live demo run."""
+def reset_demo_data(x_admin_token: str = Header(default="", alias="X-Admin-Token")):
+    """Reset all counters and logs. Requires X-Admin-Token when ADMIN_TOKEN is set."""
+    if ADMIN_TOKEN and not secrets.compare_digest(
+        x_admin_token.encode(), ADMIN_TOKEN.encode()
+    ):
+        return JSONResponse(
+            status_code=401,
+            content={"error": "Unauthorized", "message": "Valid X-Admin-Token required."}
+        )
     database.reset_all_usage()
     return {"status": "reset_complete", "message": "All usage counters and audit logs cleared."}
 
