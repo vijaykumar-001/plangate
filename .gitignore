@@ -1,5 +1,10 @@
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.db
+.env
 .pytest_cache/
-plangate.db
+*.egg-info/
+dist/
+build/
